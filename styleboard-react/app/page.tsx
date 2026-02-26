@@ -254,6 +254,15 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Footer */}
+      <footer className="bg-black text-gray-500 py-6 text-center text-xs">
+        <Link href="/privacy" className="hover:text-white transition-colors">
+          Privacy Policy
+        </Link>
+        <span className="mx-3">·</span>
+        <span>© {new Date().getFullYear()} StyleBoard</span>
+      </footer>
     </div>
   );
 }

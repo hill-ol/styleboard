@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
 import NavBar from "../components/NavBar";
+import PrivacyBanner from "../components/PrivacyBanner";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -24,6 +25,7 @@ export default function RootLayout({
           <main className="pt-16">
             {children}
           </main>
+          <PrivacyBanner />
         </AuthProvider>
       </body>
     </html>
