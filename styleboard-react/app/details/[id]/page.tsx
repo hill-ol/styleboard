@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
 import { getPhotoById, triggerDownload } from "../../../services/unsplash.service";
+import { timeAgo } from "../../../utils/dateUtils";
 import {
   getItemByUnsplashId,
   saveItem,
@@ -336,7 +337,7 @@ export default function DetailsPage() {
                             {comment.author?.username}
                           </Link>
                           <span className="text-xs text-gray-400">
-                            {new Date(comment.createdAt).toLocaleDateString()}
+                            {timeAgo(comment.createdAt)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-700">{comment.text}</p>

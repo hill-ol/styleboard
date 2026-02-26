@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
-import { updateUser } from "../../services/users.service";
+import { updateUser, getUserById } from "../../services/users.service";
 import { getBoardsByUser } from "../../services/boards.service";
 import { getLookbooksByStylist } from "../../services/lookbooks.service";
 import { createBoard } from "../../services/boards.service";
@@ -19,6 +19,8 @@ export default function OwnProfilePage() {
 
   const [boards, setBoards] = useState<any[]>([]);
   const [lookbooks, setLookbooks] = useState<any[]>([]);
+  const [followingUsers, setFollowingUsers] = useState<any[]>([]);
+  const [followerUsers, setFollowerUsers] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("boards");
   const [editing, setEditing] = useState(false);
   const [showNewBoard, setShowNewBoard] = useState(false);
@@ -40,6 +42,17 @@ export default function OwnProfilePage() {
       getBoardsByUser(currentUser._id).then(setBoards).catch(console.error);
       if (currentUser.role === "stylist") {
         getLookbooksByStylist(currentUser._id).then(setLookbooks).catch(console.error);
+      }
+      // Fetch full user objects for following/followers
+      if (currentUser.following?.length) {
+        Promise.all(currentUser.following.map((id: string) => getUserById(id)))
+          .then(setFollowingUsers)
+          .catch(console.error);
+      }
+      if (currentUser.followers?.length) {
+        Promise.all(currentUser.followers.map((id: string) => getUserById(id)))
+          .then(setFollowerUsers)
+          .catch(console.error);
       }
     }
   }, [currentUser]);
@@ -392,7 +405,7 @@ export default function OwnProfilePage() {
         {activeTab === "following" && (
           <div>
             <h2 className="text-lg font-bold text-gray-900 mb-6">Following</h2>
-            {!currentUser.following || currentUser.following.length === 0 ? (
+            {followingUsers.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
                 <p className="text-gray-400 mb-4">Not following anyone yet</p>
                 <Link href="/search" className="text-sm text-rose-500 hover:underline">
@@ -401,15 +414,8 @@ export default function OwnProfilePage() {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {currentUser.following.map((uid: any) => (
-                  <Link key={uid} href={`/profile/${uid}`}>
-                    <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center hover:shadow-md transition-shadow">
-                      <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 font-bold mx-auto mb-2">
-                        ?
-                      </div>
-                      <p className="text-sm text-gray-600">View profile</p>
-                    </div>
-                  </Link>
+                {followingUsers.map((user: any) => (
+                  <UserCard key={user._id} user={user} />
                 ))}
               </div>
             )}
@@ -420,21 +426,14 @@ export default function OwnProfilePage() {
         {activeTab === "followers" && (
           <div>
             <h2 className="text-lg font-bold text-gray-900 mb-6">Followers</h2>
-            {!currentUser.followers || currentUser.followers.length === 0 ? (
+            {followerUsers.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
                 <p className="text-gray-400">No followers yet</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {currentUser.followers.map((uid: any) => (
-                  <Link key={uid} href={`/profile/${uid}`}>
-                    <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center hover:shadow-md transition-shadow">
-                      <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 font-bold mx-auto mb-2">
-                        ?
-                      </div>
-                      <p className="text-sm text-gray-600">View profile</p>
-                    </div>
-                  </Link>
+                {followerUsers.map((user: any) => (
+                  <UserCard key={user._id} user={user} />
                 ))}
               </div>
             )}
@@ -442,5 +441,28 @@ export default function OwnProfilePage() {
         )}
       </div>
     </div>
+  );
+}
+
+function UserCard({ user }: { user: any }) {
+  return (
+    <Link href={`/profile/${user._id}`}>
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center hover:shadow-md transition-shadow group">
+        <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 font-bold mx-auto mb-3 group-hover:bg-rose-200 transition-colors">
+          {user.displayName?.[0]?.toUpperCase() || user.username[0].toUpperCase()}
+        </div>
+        <p className="text-sm font-semibold text-gray-900 truncate">
+          {user.displayName || user.username}
+        </p>
+        <p className="text-xs text-gray-400 truncate">@{user.username}</p>
+        <span className={`inline-block mt-2 text-xs px-2 py-0.5 rounded-full ${
+          user.role === "stylist"
+            ? "bg-rose-100 text-rose-600"
+            : "bg-gray-100 text-gray-500"
+        }`}>
+          {user.role}
+        </span>
+      </div>
+    </Link>
   );
 }
