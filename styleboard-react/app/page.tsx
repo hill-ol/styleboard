@@ -50,8 +50,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
 
       {/* ── Hero ── */}
-      <section className="relative bg-black text-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 py-24 md:py-32 flex flex-col md:flex-row items-center gap-12">
+      <section className="relative bg-black text-white">        <div className="max-w-7xl mx-auto px-6 py-24 md:py-32 flex flex-col md:flex-row items-center gap-12">
           <div className="flex-1 z-10">
             {currentUser ? (
               <>
