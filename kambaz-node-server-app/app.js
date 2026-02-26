@@ -29,7 +29,16 @@ app.use(
 
 // routes
 import userRoutes from "./Users/routes.js";
+import boardRoutes from "./Boards/routes.js";
+import savedItemRoutes from "./SavedItems/routes.js";
+import commentRoutes from "./Comments/routes.js";
+import lookbookRoutes from "./Lookbooks/routes.js";
+
 app.use("/api/users", userRoutes);
+app.use("/api/boards", boardRoutes);
+app.use("/api/items", savedItemRoutes);
+app.use("/api", commentRoutes);
+app.use("/api/lookbooks", lookbookRoutes);
 
 // health check
 app.get("/api/health", (req, res) => {
