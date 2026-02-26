@@ -256,12 +256,20 @@ export default function HomePage() {
       )}
 
       {/* Footer */}
-      <footer className="bg-black text-gray-500 py-6 text-center text-xs">
-        <Link href="/privacy" className="hover:text-white transition-colors">
-          Privacy Policy
-        </Link>
-        <span className="mx-3">·</span>
-        <span>© {new Date().getFullYear()} StyleBoard</span>
+      <footer className="bg-black text-gray-500 py-8 text-center text-xs">
+        <div className="flex items-center justify-center gap-6 mb-3">
+          <Link href="/" className="hover:text-white transition-colors">Home</Link>
+          <Link href="/search" className="hover:text-white transition-colors">Discover</Link>
+          <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+          {!currentUser && (
+            <Link href="/register" className="hover:text-white transition-colors">Sign up</Link>
+          )}
+        </div>
+        <p>© {new Date().getFullYear()} StyleBoard. Photos provided by{" "}
+          <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+            Unsplash
+          </a>.
+        </p>
       </footer>
     </div>
   );
