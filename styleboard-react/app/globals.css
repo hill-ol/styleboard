@@ -13,23 +13,16 @@ html {
 }
 
 body {
-  background-color: #ffffff;
-  color: #111111;
+  background-color: #FAF7F5;
+  color: #2A1A1A;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Masonry column fix */
 .columns-2 > *,
 .columns-4 > * {
   break-inside: avoid;
 }
 
-/* Hide scrollbar on aesthetic pill rows but keep scroll */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
