@@ -27,6 +27,11 @@ export default function DetailsPage() {
   const [saving, setSaving] = useState(false);
   const [commenting, setCommenting] = useState(false);
 
+  // AI outfit suggestions
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState("");
+
   const isSaved = localItem?.savedBy?.some(
     (u: any) => u._id === currentUser?._id || u === currentUser?._id
   );
@@ -56,6 +61,39 @@ export default function DetailsPage() {
     }
   }, [currentUser]);
 
+  const handleGetSuggestions = async () => {
+    setLoadingSuggestions(true);
+    setSuggestionsError("");
+    setSuggestions([]);
+    try {
+      const tags = photo?.tags?.map((t: any) => t.title).join(", ") || "";
+      const description = photo?.alt_description || "fashion photo";
+      const prompt = `You are a fashion stylist. Based on this fashion photo described as "${description}" with style tags: ${tags}, give 4 specific outfit suggestions to complement or recreate this look. Format your response as exactly 4 suggestions, each on a new line starting with a number and period (e.g. "1. ..."). Keep each suggestion to 1-2 sentences and be specific about clothing items, colors, and accessories.`;
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+          }),
+        }
+      );
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const lines = text
+        .split("\n")
+        .filter((line: string) => /^\d+\./.test(line.trim()))
+        .map((line: string) => line.replace(/^\d+\.\s*/, "").trim());
+      setSuggestions(lines);
+    } catch (err) {
+      setSuggestionsError("Could not load suggestions. Try again.");
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!currentUser) { router.push("/login"); return; }
     setSaving(true);
@@ -84,7 +122,6 @@ export default function DetailsPage() {
 
   const handleAddToBoard = async (boardId: string) => {
     if (!localItem) {
-      // Save first, then add to board
       const saved = await saveItem({
         unsplashId: id,
         imageUrl: photo?.urls?.regular || photo?.urls?.small,
@@ -105,7 +142,6 @@ export default function DetailsPage() {
     if (!commentText.trim()) return;
     setCommenting(true);
     try {
-      // Make sure item exists locally first
       let item = localItem;
       if (!item) {
         item = await saveItem({
@@ -285,13 +321,58 @@ export default function DetailsPage() {
               </div>
             </div>
 
+            {/* AI Outfit Suggestions */}
+            <div className="border border-dusty-100 rounded-2xl p-5 bg-blush/20">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-bold text-warm-900">✦ AI Outfit Suggestions</h3>
+                  <p className="text-xs text-warm-900/50 mt-0.5">Powered by Gemini</p>
+                </div>
+                <button
+                  onClick={handleGetSuggestions}
+                  disabled={loadingSuggestions}
+                  className="bg-dusty-400 hover:bg-dusty-500 text-white text-xs font-semibold px-4 py-2 rounded-full transition-colors disabled:opacity-50"
+                >
+                  {loadingSuggestions ? "Generating..." : suggestions.length > 0 ? "Refresh" : "Get Suggestions"}
+                </button>
+              </div>
+
+              {suggestionsError && (
+                <p className="text-xs text-red-400">{suggestionsError}</p>
+              )}
+
+              {loadingSuggestions && (
+                <div className="space-y-2 mt-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-4 bg-dusty-100 rounded animate-pulse" />
+                  ))}
+                </div>
+              )}
+
+              {suggestions.length > 0 && (
+                <ul className="space-y-3 mt-2">
+                  {suggestions.map((s, i) => (
+                    <li key={i} className="flex gap-2 text-sm text-warm-900/80">
+                      <span className="text-dusty-400 font-bold flex-shrink-0">{i + 1}.</span>
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {!loadingSuggestions && suggestions.length === 0 && !suggestionsError && (
+                <p className="text-xs text-warm-900/40 mt-1">
+                  Click "Get Suggestions" for AI-powered outfit ideas based on this look.
+                </p>
+              )}
+            </div>
+
             {/* Comments section */}
             <div className="border-t border-gray-100 pt-6">
               <h2 className="text-lg font-bold text-gray-900 mb-4">
                 Comments {localItem?.comments?.length > 0 && `(${localItem.comments.length})`}
               </h2>
 
-              {/* Comment form */}
               {currentUser ? (
                 <form onSubmit={handleComment} className="flex gap-2 mb-6">
                   <input
@@ -316,7 +397,6 @@ export default function DetailsPage() {
                 </p>
               )}
 
-              {/* Comment list */}
               <div className="space-y-4">
                 {localItem?.comments?.length === 0 || !localItem?.comments ? (
                   <p className="text-sm text-gray-400">No comments yet. Be the first!</p>
