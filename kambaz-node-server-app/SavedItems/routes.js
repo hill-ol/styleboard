@@ -1,9 +1,10 @@
 import express from "express";
 import * as dao from "./dao.js";
+import { requireAuth } from "../middleware.js";
 
 const router = express.Router();
 
-// Get trending/recent items (for home page)
+// Get trending/recent items
 router.get("/", async (req, res) => {
   try {
     const items = await dao.findRecentItems();
@@ -13,7 +14,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get item by Unsplash ID (used on details page)
+// Get item by Unsplash ID
 router.get("/unsplash/:unsplashId", async (req, res) => {
   try {
     const item = await dao.findItemByUnsplashId(req.params.unsplashId);
@@ -35,14 +36,11 @@ router.get("/:iid", async (req, res) => {
   }
 });
 
-// Save an item from Unsplash (auth required)
-router.post("/", async (req, res) => {
+// Save an item (auth required)
+router.post("/", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
     const item = await dao.findOrCreateItem(req.body);
-    const updated = await dao.addSavedBy(item._id, req.session.currentUser._id);
+    const updated = await dao.addSavedBy(item._id, req.currentUser._id);
     res.status(201).json(updated);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -50,12 +48,9 @@ router.post("/", async (req, res) => {
 });
 
 // Unsave an item (auth required)
-router.delete("/:iid/save", async (req, res) => {
+router.delete("/:iid/save", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
-    const updated = await dao.removeSavedBy(req.params.iid, req.session.currentUser._id);
+    const updated = await dao.removeSavedBy(req.params.iid, req.currentUser._id);
     res.json(updated);
   } catch (err) {
     res.status(500).json({ message: err.message });

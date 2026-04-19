@@ -1,5 +1,6 @@
 import express from "express";
 import * as dao from "./dao.js";
+import { requireAuth } from "../middleware.js";
 
 const router = express.Router();
 
@@ -35,14 +36,11 @@ router.get("/:bid", async (req, res) => {
 });
 
 // Create a board (auth required)
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
     const board = await dao.createBoard({
       ...req.body,
-      owner: req.session.currentUser._id,
+      owner: req.currentUser._id,
     });
     res.status(201).json(board);
   } catch (err) {
@@ -51,14 +49,11 @@ router.post("/", async (req, res) => {
 });
 
 // Update a board (owner only)
-router.put("/:bid", async (req, res) => {
+router.put("/:bid", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
     const board = await dao.findBoardById(req.params.bid);
     if (!board) return res.status(404).json({ message: "Board not found" });
-    if (board.owner._id.toString() !== req.session.currentUser._id) {
+    if (board.owner._id.toString() !== req.currentUser._id) {
       return res.status(403).json({ message: "Not authorized" });
     }
     const updated = await dao.updateBoard(req.params.bid, req.body);
@@ -69,14 +64,11 @@ router.put("/:bid", async (req, res) => {
 });
 
 // Delete a board (owner only)
-router.delete("/:bid", async (req, res) => {
+router.delete("/:bid", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
     const board = await dao.findBoardById(req.params.bid);
     if (!board) return res.status(404).json({ message: "Board not found" });
-    if (board.owner._id.toString() !== req.session.currentUser._id) {
+    if (board.owner._id.toString() !== req.currentUser._id) {
       return res.status(403).json({ message: "Not authorized" });
     }
     await dao.deleteBoard(req.params.bid);
@@ -87,11 +79,8 @@ router.delete("/:bid", async (req, res) => {
 });
 
 // Add item to board
-router.post("/:bid/items/:iid", async (req, res) => {
+router.post("/:bid/items/:iid", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
     const updated = await dao.addItemToBoard(req.params.bid, req.params.iid);
     res.json(updated);
   } catch (err) {
@@ -100,11 +89,8 @@ router.post("/:bid/items/:iid", async (req, res) => {
 });
 
 // Remove item from board
-router.delete("/:bid/items/:iid", async (req, res) => {
+router.delete("/:bid/items/:iid", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
     const updated = await dao.removeItemFromBoard(req.params.bid, req.params.iid);
     res.json(updated);
   } catch (err) {

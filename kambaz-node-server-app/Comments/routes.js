@@ -1,18 +1,16 @@
 import express from "express";
 import * as commentDao from "./dao.js";
 import * as itemDao from "../SavedItems/dao.js";
+import { requireAuth } from "../middleware.js";
 
 const router = express.Router();
 
 // Add a comment to an item (auth required)
-router.post("/items/:iid/comments", async (req, res) => {
+router.post("/items/:iid/comments", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
     const comment = await commentDao.createComment({
       text: req.body.text,
-      author: req.session.currentUser._id,
+      author: req.currentUser._id,
       itemId: req.params.iid,
     });
     await itemDao.addCommentToItem(req.params.iid, comment._id);
@@ -24,14 +22,11 @@ router.post("/items/:iid/comments", async (req, res) => {
 });
 
 // Delete a comment (author only)
-router.delete("/comments/:cid", async (req, res) => {
+router.delete("/comments/:cid", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
     const comment = await commentDao.findCommentById(req.params.cid);
     if (!comment) return res.status(404).json({ message: "Comment not found" });
-    if (comment.author._id.toString() !== req.session.currentUser._id) {
+    if (comment.author._id.toString() !== req.currentUser._id) {
       return res.status(403).json({ message: "Not authorized" });
     }
     await commentDao.deleteComment(req.params.cid);

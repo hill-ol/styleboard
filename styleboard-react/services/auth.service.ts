@@ -7,20 +7,26 @@ export const register = async (data: {
   role: string;
 }) => {
   const res = await api.post("/users/register", data);
-  return res.data;
+  const { user, token } = res.data;
+  localStorage.setItem("sb_token", token);
+  return user;
 };
 
 export const login = async (data: { username: string; password: string }) => {
   const res = await api.post("/users/login", data);
-  return res.data;
+  const { user, token } = res.data;
+  localStorage.setItem("sb_token", token);
+  return user;
 };
 
 export const logout = async () => {
-  const res = await api.post("/users/logout");
-  return res.data;
+  localStorage.removeItem("sb_token");
+  await api.post("/users/logout");
 };
 
 export const getProfile = async () => {
+  const token = localStorage.getItem("sb_token");
+  if (!token) throw new Error("No token");
   const res = await api.get("/users/profile");
   return res.data;
 };

@@ -1,5 +1,6 @@
 import express from "express";
 import * as dao from "./dao.js";
+import { requireAuth } from "../middleware.js";
 
 const router = express.Router();
 
@@ -36,17 +37,14 @@ router.get("/:lid", async (req, res) => {
 });
 
 // Create lookbook (stylist only)
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
-    if (req.session.currentUser.role !== "stylist") {
+    if (req.currentUser.role !== "stylist") {
       return res.status(403).json({ message: "Only stylists can create lookbooks" });
     }
     const lookbook = await dao.createLookbook({
       ...req.body,
-      stylist: req.session.currentUser._id,
+      stylist: req.currentUser._id,
     });
     res.status(201).json(lookbook);
   } catch (err) {
@@ -54,15 +52,12 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Update lookbook (stylist/owner only)
-router.put("/:lid", async (req, res) => {
+// Update lookbook (owner only)
+router.put("/:lid", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
     const lookbook = await dao.findLookbookById(req.params.lid);
     if (!lookbook) return res.status(404).json({ message: "Lookbook not found" });
-    if (lookbook.stylist._id.toString() !== req.session.currentUser._id) {
+    if (lookbook.stylist._id.toString() !== req.currentUser._id) {
       return res.status(403).json({ message: "Not authorized" });
     }
     const updated = await dao.updateLookbook(req.params.lid, req.body);
@@ -72,15 +67,12 @@ router.put("/:lid", async (req, res) => {
   }
 });
 
-// Delete lookbook (stylist/owner only)
-router.delete("/:lid", async (req, res) => {
+// Delete lookbook (owner only)
+router.delete("/:lid", requireAuth, async (req, res) => {
   try {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
     const lookbook = await dao.findLookbookById(req.params.lid);
     if (!lookbook) return res.status(404).json({ message: "Lookbook not found" });
-    if (lookbook.stylist._id.toString() !== req.session.currentUser._id) {
+    if (lookbook.stylist._id.toString() !== req.currentUser._id) {
       return res.status(403).json({ message: "Not authorized" });
     }
     await dao.deleteLookbook(req.params.lid);
