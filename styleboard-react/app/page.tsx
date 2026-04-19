@@ -227,6 +227,15 @@ export default function HomePage() {
           <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
           {!currentUser && <Link href="/register" className="hover:text-white transition-colors">Sign up</Link>}
         </div>
+        <div className="flex items-center justify-center gap-6 mb-3">
+          <a href="https://github.com/hill-ol/styleboard/tree/main/styleboard-react" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+            Frontend Repo
+          </a>
+          <a href="https://github.com/hill-ol/styleboard/tree/main/kambaz-node-server-app" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+            Backend Repo
+          </a>
+        </div>
+        <p className="mb-1">Olivia Hill — Online Section</p>
         <p>© {new Date().getFullYear()} StyleBoard. Photos provided by{" "}
           <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Unsplash</a>.
         </p>
